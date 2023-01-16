@@ -81,12 +81,82 @@ def get_weather_forecast():
     ret[headers[5]] = col_6
     return ret
 
+# 获取空气品质
+def get_aqi():
+    ret = {} # 组装数据, 类型为字典
+
+    url = 'https://data.epa.gov.tw/api/v2/aqx_p_432?api_key=e8dd42e6-9b8b-43f8-991e-b3dee723a52d&limit=1000&sort=ImportDate%20desc&format=JSON'
+    resp = requests.get(url)
+    resp.encoding = 'utf-8' # 使用与网页相对应的编码格式, 避免乱码
+    data = resp.json()
+    location = data['records']
+    
+    col_1 = []
+    col_2 = []
+    col_3 = []
+    col_4 = []
+    for index in range(len(location)):
+        city    = location[index]['county'] # 县市
+        area    = location[index]['sitename'] # 行政区
+        aqi     = location[index]['aqi'] # aqi
+        status  = location[index]['status'] # 空气品质状态
+        col_1.append(city)
+        col_2.append(area)
+        col_3.append(aqi)
+        col_4.append(status)
+
+    headers  = ['县市', '行政区', 'AQI', '空气品质']
+    ret[headers[0]] = col_1
+    ret[headers[1]] = col_2
+    ret[headers[2]] = col_3
+    ret[headers[3]] = col_4
+    return ret
+
+# 获取地震信息
+def get_earthquake():
+    ret = {} # 组装数据, 类型为字典
+
+    url = 'https://opendata.cwb.gov.tw/api/v1/rest/datastore/E-A0016-001?Authorization=CWB-66ECD273-CA87-4B56-9F1E-BB49875601FE'
+    resp = requests.get(url)
+    resp.encoding = 'utf-8' # 使用与网页相对应的编码格式, 避免乱码
+    data = resp.json()
+    location = data['records']['Earthquake'] # 字段大小写要区分, 否则获取到数据
+
+    col_1 = []
+    col_2 = []
+    col_3 = []
+    col_4 = []
+    col_5 = []
+    for index in range(len(location)):
+        loc         = location[index]['EarthquakeInfo']['Epicenter']['Location'] # 地震地点
+        magnitude   = location[index]['EarthquakeInfo']['EarthquakeMagnitude']['MagnitudeValue'] # 芮氏规模
+        depth       = location[index]['EarthquakeInfo']['FocalDepth'] # 地震深度
+        time        = location[index]['EarthquakeInfo']['OriginTime'] # 地震时间
+        img_url     = location[index]['ReportImageURI'] # 图片
+        col_1.append(loc)
+        col_2.append(magnitude)
+        col_3.append(depth)
+        col_4.append(time)
+        col_5.append(img_url)
+
+    headers  = ['地点', '芮氏规模(级)', '深度(公里)', '时间', '图片']
+    ret[headers[0]] = col_1
+    ret[headers[1]] = col_2
+    ret[headers[2]] = col_3
+    ret[headers[3]] = col_4
+    ret[headers[4]] = col_5
+    return ret
+
 def main():
     try:
-        source = input('请输入数据来源 1=现在天气 2=天气预报 : ') # 交互式输入
+        source = input('请输入数据来源 1=现在天气 2=天气预报 3=空气品质 4=地震信息 : ') # 交互式输入
 
         if source == '2':
             export_data = get_weather_forecast() # 天气预报
+        elif source == '3':
+            export_data = get_aqi() # 空气品质状态
+        elif source == '4':
+            export_data = get_earthquake() # 地震信息
         else:
             export_data = get_now_weather() # 现在天气
 
